@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPT Analytics · Panel de Control</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+    --accent3: #d2a8ff;
+    --accent4: #ffa657;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --danger: #f85149;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.2rem;
+    letter-spacing: -0.5px;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .header-meta {
+    font-size: 0.72rem;
+    color: var(--muted);
+  }
+
+  /* MAIN LAYOUT */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  section.page-section { margin-top: 36px; }
+
+  h2.section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* STAT CARDS */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    transition: border-color 0.2s;
+  }
+
+  .stat-card:hover { border-color: var(--accent); }
+
+  .stat-label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+  }
+
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .stat-sub {
+    font-size: 0.68rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  .c-blue { color: var(--accent); }
+  .c-green { color: var(--accent2); }
+  .c-purple { color: var(--accent3); }
+  .c-orange { color: var(--accent4); }
+
+  /* TABLA DE GPTs */
+  .gpt-table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  thead {
+    background: var(--surface2);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+  }
+
+  th, td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: rgba(88,166,255,0.04); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    font-weight: 500;
+  }
+
+  .badge-active { background: rgba(63,185,80,0.15); color: var(--accent2); }
+  .badge-draft  { background: rgba(139,148,158,0.15); color: var(--muted); }
+  .badge-paused { background: rgba(255,166,87,0.15); color: var(--accent4); }
+
+  .btn-icon {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 5px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.2s;
+  }
+
+  .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* FORMULARIO */
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  label {
+    font-size: 0.68rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  input, select, textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 9px 12px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+
+  textarea { resize: vertical; min-height: 70px; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0d1117;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 22px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .btn-primary:hover { opacity: 0.85; }
+
+  .btn-danger {
+    background: none;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: 5px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.2s;
+  }
+
+  .btn-danger:hover { background: rgba(248,81,73,0.1); }
+
+  /* EXPORTAR / UTIL */
+  .actions-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  .btn-outline {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* MINI CHART (CSS barras) */
+  .mini-chart { display: flex; align-items: flex-end; gap: 4px; height: 40px; }
+
+  .bar {
+    flex: 1;
+    background: var(--accent);
+    border-radius: 2px 2px 0 0;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+
+  .bar:hover { opacity: 1; }
+
+  /* NOTES / TOAST */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--accent2);
+    color: #0d1117;
+    padding: 10px 18px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: none;
+    animation: fadeup 0.3s ease;
+    z-index: 999;
+  }
+
+  @keyframes fadeup {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+
+  /* GUIA PASO A PASO */
+  .guide-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .guide-step {
+    display: flex;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+
+  .guide-step:last-child { border-bottom: none; }
+
+  .step-num {
+    background: var(--accent);
+    color: #0d1117;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .step-body h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--text);
+  }
+
+  .step-body p {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .step-body code {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.75rem;
+    color: var(--accent3);
+  }
+
+  .step-body a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .step-body a:hover { text-decoration: underline; }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    header { padding: 14px 16px; }
+    .container { padding: 0 14px; }
+    th:nth-child(4), td:nth-child(4),
+    th:nth-child(5), td:nth-child(5) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">GPT <span>Analytics</span></div>
+  <div class="header-meta" id="fechaHoy"></div>
+</header>
+
+<div id="toast">✓ Registro guardado</div>
+
+<div class="container">
+
+  <!-- STATS SUMMARY -->
+  <section class="page-section">
+    <h2 class="section-title">Resumen General</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">GPTs Registrados</div>
+        <div class="stat-value c-blue" id="stat-total">0</div>
+        <div class="stat-sub">total acumulado</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Usos Totales</div>
+        <div class="stat-value c-green" id="stat-usos">0</div>
+        <div class="stat-sub">suma de interacciones</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">GPTs Activos</div>
+        <div class="stat-value c-purple" id="stat-activos">0</div>
+        <div class="stat-sub">estado = activo</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Último Registro</div>
+        <div class="stat-value c-orange" style="font-size:1.1rem" id="stat-ultimo">—</div>
+        <div class="stat-sub">fecha más reciente</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TABLA GPTs -->
+  <section class="page-section">
+    <h2 class="section-title">Mis GPTs</h2>
+    <div class="gpt-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nombre del GPT</th>
+            <th>Contexto / Propósito</th>
+            <th>Estado</th>
+            <th>Usos</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tablaGPT">
+          <tr><td colspan="6" class="empty-state">No hay registros aún. Agrega tu primer GPT abajo ↓</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="actions-row">
+      <button class="btn-outline" onclick="exportCSV()">⬇ Exportar CSV</button>
+      <button class="btn-outline" onclick="exportJSON()">⬇ Exportar JSON</button>
+      <button class="btn-outline" onclick="limpiarTodo()">🗑 Limpiar todo</button>
+    </div>
+  </section>
+
+  <!-- FORMULARIO REGISTRO -->
+  <section class="page-section">
+    <h2 class="section-title">Registrar / Actualizar GPT</h2>
+    <div class="form-card">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Nombre del GPT *</label>
+          <input type="text" id="f-nombre" placeholder="Ej: Generador de Ideas MF">
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="f-estado">
+            <option value="activo">Activo</option>
+            <option value="borrador">Borrador</option>
+            <option value="pausado">Pausado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Número de usos (manual)</label>
+          <input type="number" id="f-usos" placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label>Audiencia objetivo</label>
+          <input type="text" id="f-audiencia" placeholder="Ej: Residentes de MF">
+        </div>
+        <div class="form-group">
+          <label>País / Región</label>
+          <input type="text" id="f-region" placeholder="Ej: Iberoamérica">
+        </div>
+        <div class="form-group">
+          <label>Versión del modelo</label>
+          <input type="text" id="f-modelo" placeholder="Ej: GPT-4o">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Descripción / Propósito</label>
+        <textarea id="f-descripcion" placeholder="¿Qué hace este GPT? ¿Cuál es su objetivo educativo o clínico?"></textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:16px">
+        <label>Observaciones / Notas de evaluación</label>
+        <textarea id="f-notas" placeholder="Feedback recibido, mejoras pendientes, limitaciones detectadas..."></textarea>
+      </div>
+      <button class="btn-primary" onclick="guardarGPT()">+ Guardar Registro</button>
+    </div>
+  </section>
+
+  <!-- GUÍA PASO A PASO PUBLICACIÓN -->
+  <section class="page-section">
+    <h2 class="section-title">Guía: Cómo Publicar Esta Página Gratis</h2>
+    <div class="guide-card">
+
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>Descarga este archivo HTML</h3>
+          <p>Guarda la página usando <code>Ctrl+S</code> (o botón de descarga arriba) con el nombre <code>index.html</code>. Es un archivo único, sin dependencias externas de backend.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>Crea una cuenta en GitHub (si no tienes)</h3>
+          <p>Ve a <a href="https://github.com" target="_blank">github.com</a> y regístrate gratis. GitHub es donde alojarás el archivo. No necesitas saber programar.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>Crea un repositorio nuevo</h3>
+          <p>Haz clic en <code>+ New repository</code>. Nómbralo exactamente <code>gpt-analytics</code> (o el nombre que prefieras). Márcalo como <code>Public</code> y activa la opción <code>Add a README file</code>. Luego haz clic en <code>Create repository</code>.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>Sube el archivo index.html</h3>
+          <p>Dentro del repositorio, haz clic en <code>Add file → Upload files</code>. Arrastra tu archivo <code>index.html</code> y haz clic en <code>Commit changes</code> (botón verde).</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>Activa GitHub Pages</h3>
+          <p>Ve a <code>Settings → Pages</code> (en el menú lateral del repositorio). En <code>Source</code> selecciona <code>Deploy from a branch</code>, elige la rama <code>main</code> y carpeta <code>/ (root)</code>. Haz clic en <code>Save</code>.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>Espera 1–2 minutos y accede a tu URL</h3>
+          <p>GitHub te mostrará la URL de tu página, que tendrá el formato: <code>https://TU-USUARIO.github.io/gpt-analytics/</code>. ¡Listo! Puedes compartirla con colaboradores.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>Para actualizar la página en el futuro</h3>
+          <p>Edita el archivo localmente y vuelve a subirlo con <code>Add file → Upload files</code>, o usa el editor en línea de GitHub haciendo clic en el archivo y luego en el ícono del lápiz ✏️. Los cambios se publican automáticamente en minutos.</p>
+        </div>
+      </div>
+
+      <div class="guide-step">
+        <div class="step-num">✦</div>
+        <div class="step-body">
+          <h3>Alternativa aún más simple: Netlify Drop</h3>
+          <p>Si prefieres algo más inmediato, ve a <a href="https://app.netlify.com/drop" target="_blank">app.netlify.com/drop</a>, arrastra tu <code>index.html</code> y obtendrás una URL pública en segundos. Sin cuenta necesaria inicialmente.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ── Datos en localStorage ──────────────────────────────
+const KEY = 'gpt_analytics_data';
+
+function cargarDatos() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || []; }
+  catch(e) { return []; }
+}
+
+function guardarDatos(arr) {
+  localStorage.setItem(KEY, JSON.stringify(arr));
+}
+
+// ── Render tabla ────────────────────────────────────────
+function renderTabla() {
+  const datos = cargarDatos();
+  const tbody = document.getElementById('tablaGPT');
+
+  if (datos.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No hay registros aún. Agrega tu primer GPT abajo ↓</td></tr>';
+    actualizarStats([]);
+    return;
+  }
+
+  tbody.innerHTML = datos.map((g, i) => `
+    <tr>
+      <td><strong>${esc(g.nombre)}</strong>${g.audiencia ? '<br><span style="font-size:0.7rem;color:var(--muted)">'+esc(g.audiencia)+'</span>' : ''}</td>
+      <td style="max-width:220px;font-size:0.78rem;color:var(--muted)">${esc(g.descripcion || '—').substring(0,80)}${g.descripcion && g.descripcion.length>80?'…':''}</td>
+      <td><span class="badge badge-${g.estado}">${g.estado}</span></td>
+      <td>${g.usos || 0}</td>
+      <td style="font-size:0.75rem;color:var(--muted)">${g.fecha || '—'}</td>
+      <td>
+        <button class="btn-icon" onclick="editarGPT(${i})">editar</button>
+        <button class="btn-danger" onclick="eliminarGPT(${i})" style="margin-left:4px">×</button>
+      </td>
+    </tr>
+  `).join('');
+
+  actualizarStats(datos);
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Stats ───────────────────────────────────────────────
+function actualizarStats(datos) {
+  document.getElementById('stat-total').textContent = datos.length;
+  document.getElementById('stat-usos').textContent  = datos.reduce((a,g)=>a+(parseInt(g.usos)||0),0);
+  document.getElementById('stat-activos').textContent = datos.filter(g=>g.estado==='activo').length;
+  const fechas = datos.map(g=>g.fecha).filter(Boolean).sort();
+  document.getElementById('stat-ultimo').textContent = fechas.length ? fechas[fechas.length-1] : '—';
+}
+
+// ── Guardar ─────────────────────────────────────────────
+let editIdx = null;
+
+function guardarGPT() {
+  const nombre = document.getElementById('f-nombre').value.trim();
+  if (!nombre) { alert('El nombre del GPT es obligatorio.'); return; }
+
+  const reg = {
+    nombre,
+    estado:      document.getElementById('f-estado').value,
+    usos:        parseInt(document.getElementById('f-usos').value) || 0,
+    audiencia:   document.getElementById('f-audiencia').value.trim(),
+    region:      document.getElementById('f-region').value.trim(),
+    modelo:      document.getElementById('f-modelo').value.trim(),
+    descripcion: document.getElementById('f-descripcion').value.trim(),
+    notas:       document.getElementById('f-notas').value.trim(),
+    fecha:       new Date().toISOString().slice(0,10),
+  };
+
+  const datos = cargarDatos();
+  if (editIdx !== null) { datos[editIdx] = reg; editIdx = null; }
+  else { datos.push(reg); }
+
+  guardarDatos(datos);
+  limpiarForm();
+  renderTabla();
+  showToast('✓ Registro guardado');
+}
+
+// ── Editar ──────────────────────────────────────────────
+function editarGPT(i) {
+  const g = cargarDatos()[i];
+  document.getElementById('f-nombre').value      = g.nombre || '';
+  document.getElementById('f-estado').value      = g.estado || 'activo';
+  document.getElementById('f-usos').value        = g.usos || 0;
+  document.getElementById('f-audiencia').value   = g.audiencia || '';
+  document.getElementById('f-region').value      = g.region || '';
+  document.getElementById('f-modelo').value      = g.modelo || '';
+  document.getElementById('f-descripcion').value = g.descripcion || '';
+  document.getElementById('f-notas').value       = g.notas || '';
+  editIdx = i;
+  document.querySelector('.form-card').scrollIntoView({behavior:'smooth'});
+}
+
+// ── Eliminar ────────────────────────────────────────────
+function eliminarGPT(i) {
+  if (!confirm('¿Eliminar este registro?')) return;
+  const datos = cargarDatos();
+  datos.splice(i, 1);
+  guardarDatos(datos);
+  renderTabla();
+}
+
+// ── Limpiar form ────────────────────────────────────────
+function limpiarForm() {
+  ['f-nombre','f-usos','f-audiencia','f-region','f-modelo','f-descripcion','f-notas']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-estado').value = 'activo';
+  editIdx = null;
+}
+
+// ── Limpiar todo ────────────────────────────────────────
+function limpiarTodo() {
+  if (!confirm('¿Borrar TODOS los registros? Esta acción no se puede deshacer.')) return;
+  localStorage.removeItem(KEY);
+  renderTabla();
+}
+
+// ── Exportar CSV ────────────────────────────────────────
+function exportCSV() {
+  const datos = cargarDatos();
+  if (!datos.length) { alert('No hay datos para exportar.'); return; }
+  const cols = ['nombre','estado','usos','audiencia','region','modelo','descripcion','notas','fecha'];
+  const header = cols.join(',');
+  const rows = datos.map(g => cols.map(c => '"'+(g[c]||'').toString().replace(/"/g,'""')+'"').join(','));
+  const blob = new Blob([header+'\n'+rows.join('\n')], {type:'text/csv;charset=utf-8'});
+  descargar(blob, 'gpt-analytics.csv');
+}
+
+// ── Exportar JSON ───────────────────────────────────────
+function exportJSON() {
+  const datos = cargarDatos();
+  if (!datos.length) { alert('No hay datos para exportar.'); return; }
+  const blob = new Blob([JSON.stringify(datos, null, 2)], {type:'application/json'});
+  descargar(blob, 'gpt-analytics.json');
+}
+
+function descargar(blob, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+// ── Toast ───────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2500);
+}
+
+// ── Fecha header ────────────────────────────────────────
+document.getElementById('fechaHoy').textContent =
+  new Date().toLocaleDateString('es-ES', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+// ── Init ─────────────────────────────────────────────────
+renderTabla();
+</script>
+</body>
+</html>
